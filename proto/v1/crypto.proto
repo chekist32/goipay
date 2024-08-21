@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package crypto.v1;
+
+enum CoinType {
+    XMR = 0;
+    BTC = 1;
+    LTC = 2;
+    ETH = 3;
+    TON = 4;
+}
+
+message XmrKeysUpdateRequest {
+    string privViewKey = 1;
+    string pubSpendKey = 2;
+}

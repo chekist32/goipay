@@ -1,0 +1,19 @@
+mode: ${MODE}
+
+server:
+  host: ${SERVER_HOST}
+  port: ${SERVER_PORT}
+
+database:
+  host: ${DATABASE_HOST}
+  port: ${DATABASE_PORT}
+  user: ${DATABASE_USER}
+  pass: ${DATABASE_PASS}
+  name: ${DATABASE_NAME}
+
+coin:
+  xmr:
+    daemon:
+      url: ${XMR_DAEMON_URL}
+      user: ${XMR_DAEMON_USER}
+      pass: ${XMR_DAEMON_PASS}

@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "crypto.proto";
+
+package invoice.v1;
+
+enum InvoiceStatusType {
+    PENDING = 0;
+    PENDING_MEMPOOL = 1;
+    EXPIRED = 2;
+    CONFIRMED = 3;
+}
+
+message Invoice {
+    string id = 1;
+    string cryptoAddress = 2;
+    crypto.v1.CoinType coin = 3;
+    double requiredAmount = 4;
+    double actualAmount = 5;
+    uint32 confirmationsRequired = 6;
+    google.protobuf.Timestamp createdAt = 7;
+    google.protobuf.Timestamp confirmedAt = 8;
+    InvoiceStatusType status = 9;
+    google.protobuf.Timestamp expiresAt = 10;
+    string txId = 11;
+    string userId = 12;
+}
+
+
+message CreateInvoiceRequest {
+    string userId = 1;
+    crypto.v1.CoinType coin = 2;
+    double amount = 3;
+    uint64 timeout = 4;
+    uint32 confirmations = 5;
+}
+message CreateInvoiceResponse {
+    string paymentId = 1;
+    string address = 2;
+}
+
+message GetInvoicesRequest {
+    repeated string paymentIds = 1;
+}
+message GetInvoicesResponse {
+    repeated Invoice invoices = 1;
+}
+
+message InvoiceStatusStreamRequest{}
+message InvoiceStatusStreamResponse {
+    Invoice invoice = 1;
+}
+
+service InvoiceService {
+    rpc CreateInvoice(CreateInvoiceRequest) returns (CreateInvoiceResponse);
+    rpc GetInvoices(GetInvoicesRequest) returns (GetInvoicesResponse);
+    rpc InvoiceStatusStream(InvoiceStatusStreamRequest) returns (stream InvoiceStatusStreamResponse);
+}

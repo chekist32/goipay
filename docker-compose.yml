@@ -1,0 +1,38 @@
+version: '3.4'
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: goipay_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d goipay_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "54321:5432"
+
+  migrations:
+    image: ghcr.io/kukymbr/goose-docker:3.21.1
+    environment:
+      - GOOSE_DRIVER=postgres
+      - GOOSE_DBSTRING=host=db port=5432 user=postgres password=postgres dbname=goipay_db
+    volumes:
+      - ./sql/migrations:/migrations
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend-processor:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./.env.docker
+    depends_on:
+      - migrations
+    ports:
+      - "3000:3000"

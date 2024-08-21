@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "crypto.proto";
+
+package user.v1;
+
+message RegisterUserRequest {}
+message RegisterUserResponse {
+    string userId = 1;
+}
+
+message UpdateCryptoKeysRequest {
+    string userId = 1;
+    optional crypto.v1.XmrKeysUpdateRequest xmrReq = 2;
+}
+message UpdateCryptoKeysResponse {}
+
+service UserService {
+    rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+    rpc UpdateCryptoKeys(UpdateCryptoKeysRequest) returns (UpdateCryptoKeysResponse);
+}
+
