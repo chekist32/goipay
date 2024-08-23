@@ -1,7 +1,6 @@
 package util
 
 import (
-	"errors"
 	"math"
 
 	"github.com/chekist32/goipay/internal/db"
@@ -43,7 +42,7 @@ func PbCoinToDbCoin(coin pb_v1.CoinType) (db.CoinType, error) {
 		return db.CoinTypeTON, nil
 	}
 
-	return "", errors.New("invalid protoBuf coin type")
+	return "", invalidProtoBufCoinTypeErr
 }
 
 func DbCoinToPbCoin(coin db.CoinType) (pb_v1.CoinType, error) {
@@ -60,7 +59,7 @@ func DbCoinToPbCoin(coin db.CoinType) (pb_v1.CoinType, error) {
 		return pb_v1.CoinType_TON, nil
 	}
 
-	return math.MaxInt32, errors.New("invalid sqlc coin type")
+	return math.MaxInt32, invalidDbCoinTypeErr
 }
 
 func DbInvoiceStatusToPbInvoiceStatus(status db.InvoiceStatusType) (pb_v1.InvoiceStatusType, error) {
@@ -75,7 +74,7 @@ func DbInvoiceStatusToPbInvoiceStatus(status db.InvoiceStatusType) (pb_v1.Invoic
 		return pb_v1.InvoiceStatusType_EXPIRED, nil
 	}
 
-	return math.MaxInt32, errors.New("invalid sqlc status type")
+	return math.MaxInt32, invalidDbStatusTypeErr
 }
 
 func DbInvoiceToPbInvoice(invoice *db.Invoice) *pb_v1.Invoice {
@@ -93,6 +92,7 @@ func DbInvoiceToPbInvoice(invoice *db.Invoice) *pb_v1.Invoice {
 		ConfirmedAt:           timestamppb.New(invoice.ConfirmedAt.Time),
 		Status:                status,
 		ExpiresAt:             timestamppb.New(invoice.ExpiresAt.Time),
+		TxId:                  invoice.TxID.String,
 		UserId:                PgUUIDToString(invoice.UserID),
 	}
 }
