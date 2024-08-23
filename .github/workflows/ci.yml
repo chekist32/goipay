@@ -39,5 +39,8 @@ jobs:
       - name: Install Dependencies 
         run: go mod download
 
+      - name: Run Unit Tests
+        run: go test ./internal/...
+
       - name: Run DB Integration Tests
         run: go test ./test/integration/db
