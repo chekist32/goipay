@@ -73,4 +73,5 @@ jobs:
           XMR_SPEND_WALLET_PASSWORD: ${{ secrets.XMR_SPEND_WALLET_PASSWORD }}
         run: | 
           cd ./test/e2e/golang
+          chmod a+rw -R ./resources
           go test ./test
