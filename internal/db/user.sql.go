@@ -23,6 +23,17 @@ func (q *Queries) CreateUser(ctx context.Context) (pgtype.UUID, error) {
 	return id, err
 }
 
+const createUserWithId = `-- name: CreateUserWithId :one
+INSERT INTO users(id) VALUES($1)
+RETURNING id
+`
+
+func (q *Queries) CreateUserWithId(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createUserWithId, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
 const userExistsById = `-- name: UserExistsById :one
 SELECT EXISTS (
     SELECT 1
