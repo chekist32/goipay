@@ -4,7 +4,9 @@ import "crypto.proto";
 
 package user.v1;
 
-message RegisterUserRequest {}
+message RegisterUserRequest {
+    optional string userId = 1;
+}
 message RegisterUserResponse {
     string userId = 1;
 }
