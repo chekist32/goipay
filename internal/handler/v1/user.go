@@ -7,6 +7,7 @@ import (
 	"github.com/chekist32/goipay/internal/db"
 	pb_v1 "github.com/chekist32/goipay/internal/pb/v1"
 	"github.com/chekist32/goipay/internal/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
@@ -19,6 +20,34 @@ type UserGrpc struct {
 	pb_v1.UnimplementedUserServiceServer
 }
 
+func (u *UserGrpc) createUser(ctx context.Context, q *db.Queries, in *pb_v1.RegisterUserRequest) (*pgtype.UUID, error) {
+	// With userId in the request
+	if in.UserId == nil {
+		userId, err := q.CreateUser(ctx)
+		if err != nil {
+			u.log.Err(err).Str("queryName", "CreateUser").Msg(util.DefaultFailedSqlQueryMsg)
+			return nil, status.Error(codes.Internal, util.DefaultFailedSqlQueryMsg)
+		}
+
+		return &userId, err
+	}
+
+	// Without userId in the request
+	userIdReq, err := util.StringToPgUUID(*in.UserId)
+	if err != nil {
+		u.log.Err(err).Msg("invalid userId (uuid)")
+		return nil, status.Error(codes.InvalidArgument, "invalid userId (uuid)")
+	}
+
+	userId, err := q.CreateUserWithId(ctx, *userIdReq)
+	if err != nil {
+		u.log.Err(err).Str("queryName", "CreateUserWithId").Msg(util.DefaultFailedSqlQueryMsg)
+		return nil, status.Error(codes.Internal, util.DefaultFailedSqlQueryMsg)
+	}
+
+	return &userId, err
+}
+
 func (u *UserGrpc) RegisterUser(ctx context.Context, in *pb_v1.RegisterUserRequest) (*pb_v1.RegisterUserResponse, error) {
 	q, tx, err := util.InitDbQueriesWithTx(ctx, u.dbConnPool)
 	if err != nil {
@@ -26,14 +55,13 @@ func (u *UserGrpc) RegisterUser(ctx context.Context, in *pb_v1.RegisterUserReque
 		return nil, status.Error(codes.Internal, util.DefaultFailedSqlTxInitMsg)
 	}
 
-	userId, err := q.CreateUser(ctx)
+	userId, err := u.createUser(ctx, q, in)
 	if err != nil {
 		tx.Rollback(ctx)
-		u.log.Err(err).Str("queryName", "CreateUser").Msg(util.DefaultFailedSqlQueryMsg)
-		return nil, status.Error(codes.Internal, util.DefaultFailedSqlQueryMsg)
+		return nil, err
 	}
 
-	_, err = q.CreateCryptoData(ctx, db.CreateCryptoDataParams{UserID: userId})
+	_, err = q.CreateCryptoData(ctx, db.CreateCryptoDataParams{UserID: *userId})
 	if err != nil {
 		tx.Rollback(ctx)
 		u.log.Err(err).Str("queryName", "CreateUser").Msg(util.DefaultFailedSqlQueryMsg)
@@ -42,7 +70,7 @@ func (u *UserGrpc) RegisterUser(ctx context.Context, in *pb_v1.RegisterUserReque
 
 	tx.Commit(ctx)
 
-	return &pb_v1.RegisterUserResponse{UserId: util.PgUUIDToString(userId)}, nil
+	return &pb_v1.RegisterUserResponse{UserId: util.PgUUIDToString(*userId)}, nil
 }
 
 func (u *UserGrpc) handleXmrCryptoDataUpdate(ctx context.Context, q *db.Queries, in *pb_v1.XmrKeysUpdateRequest, cryptData *db.CryptoDatum) error {
