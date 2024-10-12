@@ -14,3 +14,8 @@ message XmrKeysUpdateRequest {
     string privViewKey = 1;
     string pubSpendKey = 2;
 }
+
+message XmrKeys {
+   string privViewKey = 1;
+   string pubSpendKey = 2;
+}
