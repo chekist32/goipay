@@ -6,6 +6,14 @@ RETURNING *;
 SELECT * FROM crypto_data 
 WHERE user_id = $1;
 
+-- name: FindCryptoKeysByUserId :one
+SELECT 
+    COALESCE(xmr.priv_view_key, '') AS priv_view_key, 
+    COALESCE(xmr.pub_spend_key, '') AS pub_spend_key
+FROM crypto_data as cd
+LEFT JOIN xmr_crypto_data as xmr ON cd.xmr_id = xmr.id
+WHERE cd.user_id = $1;
+
 -- name: SetXMRCryptoDataByUserId :one
 UPDATE crypto_data
 SET xmr_id = $2 

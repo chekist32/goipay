@@ -64,6 +64,27 @@ func (q *Queries) FindCryptoDataByUserId(ctx context.Context, userID pgtype.UUID
 	return i, err
 }
 
+const findCryptoKeysByUserId = `-- name: FindCryptoKeysByUserId :one
+SELECT 
+    COALESCE(xmr.priv_view_key, '') AS priv_view_key, 
+    COALESCE(xmr.pub_spend_key, '') AS pub_spend_key
+FROM crypto_data as cd
+LEFT JOIN xmr_crypto_data as xmr ON cd.xmr_id = xmr.id
+WHERE cd.user_id = $1
+`
+
+type FindCryptoKeysByUserIdRow struct {
+	PrivViewKey string
+	PubSpendKey string
+}
+
+func (q *Queries) FindCryptoKeysByUserId(ctx context.Context, userID pgtype.UUID) (FindCryptoKeysByUserIdRow, error) {
+	row := q.db.QueryRow(ctx, findCryptoKeysByUserId, userID)
+	var i FindCryptoKeysByUserIdRow
+	err := row.Scan(&i.PrivViewKey, &i.PubSpendKey)
+	return i, err
+}
+
 const findIndicesAndLockXMRCryptoDataById = `-- name: FindIndicesAndLockXMRCryptoDataById :one
 SELECT last_major_index, last_minor_index 
 FROM xmr_crypto_data

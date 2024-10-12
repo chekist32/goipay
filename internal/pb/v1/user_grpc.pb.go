@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion8
 const (
 	UserService_RegisterUser_FullMethodName     = "/user.v1.UserService/RegisterUser"
 	UserService_UpdateCryptoKeys_FullMethodName = "/user.v1.UserService/UpdateCryptoKeys"
+	UserService_GetCryptoKeys_FullMethodName    = "/user.v1.UserService/GetCryptoKeys"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -29,6 +30,7 @@ const (
 type UserServiceClient interface {
 	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
 	UpdateCryptoKeys(ctx context.Context, in *UpdateCryptoKeysRequest, opts ...grpc.CallOption) (*UpdateCryptoKeysResponse, error)
+	GetCryptoKeys(ctx context.Context, in *GetCryptoKeysRequest, opts ...grpc.CallOption) (*GetCryptoKeysResponse, error)
 }
 
 type userServiceClient struct {
@@ -59,12 +61,23 @@ func (c *userServiceClient) UpdateCryptoKeys(ctx context.Context, in *UpdateCryp
 	return out, nil
 }
 
+func (c *userServiceClient) GetCryptoKeys(ctx context.Context, in *GetCryptoKeysRequest, opts ...grpc.CallOption) (*GetCryptoKeysResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCryptoKeysResponse)
+	err := c.cc.Invoke(ctx, UserService_GetCryptoKeys_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
 	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
 	UpdateCryptoKeys(context.Context, *UpdateCryptoKeysRequest) (*UpdateCryptoKeysResponse, error)
+	GetCryptoKeys(context.Context, *GetCryptoKeysRequest) (*GetCryptoKeysResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -77,6 +90,9 @@ func (UnimplementedUserServiceServer) RegisterUser(context.Context, *RegisterUse
 }
 func (UnimplementedUserServiceServer) UpdateCryptoKeys(context.Context, *UpdateCryptoKeysRequest) (*UpdateCryptoKeysResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCryptoKeys not implemented")
+}
+func (UnimplementedUserServiceServer) GetCryptoKeys(context.Context, *GetCryptoKeysRequest) (*GetCryptoKeysResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCryptoKeys not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -127,6 +143,24 @@ func _UserService_UpdateCryptoKeys_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetCryptoKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCryptoKeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetCryptoKeys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetCryptoKeys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetCryptoKeys(ctx, req.(*GetCryptoKeysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -141,6 +175,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCryptoKeys",
 			Handler:    _UserService_UpdateCryptoKeys_Handler,
+		},
+		{
+			MethodName: "GetCryptoKeys",
+			Handler:    _UserService_GetCryptoKeys_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -17,8 +17,16 @@ message UpdateCryptoKeysRequest {
 }
 message UpdateCryptoKeysResponse {}
 
+message GetCryptoKeysRequest {
+    string userId = 1;
+}
+message GetCryptoKeysResponse {
+    optional crypto.v1.XmrKeys xmrKeys = 1;
+}
+
 service UserService {
     rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
     rpc UpdateCryptoKeys(UpdateCryptoKeysRequest) returns (UpdateCryptoKeysResponse);
+    rpc GetCryptoKeys(GetCryptoKeysRequest) returns (GetCryptoKeysResponse);
 }
 
