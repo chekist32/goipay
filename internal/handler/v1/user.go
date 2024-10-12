@@ -151,6 +151,42 @@ func (u *UserGrpc) UpdateCryptoKeys(ctx context.Context, in *pb_v1.UpdateCryptoK
 	return &pb_v1.UpdateCryptoKeysResponse{}, nil
 }
 
+func (u *UserGrpc) GetCryptoKeys(ctx context.Context, in *pb_v1.GetCryptoKeysRequest) (*pb_v1.GetCryptoKeysResponse, error) {
+	q, tx, err := util.InitDbQueriesWithTx(ctx, u.dbConnPool)
+	if err != nil {
+		u.log.Err(err).Msg(util.DefaultFailedSqlTxInitMsg)
+		return nil, status.Error(codes.Internal, util.DefaultFailedSqlTxInitMsg)
+	}
+
+	userId, err := util.StringToPgUUID(in.UserId)
+	if err != nil {
+		tx.Rollback(ctx)
+		u.log.Err(err).Msg("An error occurred while converting the string to the PostgreSQL UUID data type.")
+		return nil, status.Error(codes.InvalidArgument, "invalid userId")
+	}
+
+	if err := checkIfUserExistsUUID(ctx, u.log, q, *userId); err != nil {
+		tx.Rollback(ctx)
+		return nil, err
+	}
+
+	cryptoKeys, err := q.FindCryptoKeysByUserId(ctx, *userId)
+	if err != nil {
+		tx.Rollback(ctx)
+		u.log.Err(err).Str("queryName", "FindCryptoKeysByUserId").Msg(util.DefaultFailedSqlQueryMsg)
+		return nil, status.Error(codes.Internal, util.DefaultFailedSqlQueryMsg)
+	}
+
+	tx.Commit(ctx)
+
+	return &pb_v1.GetCryptoKeysResponse{
+		XmrKeys: &pb_v1.XmrKeys{
+			PrivViewKey: cryptoKeys.PrivViewKey,
+			PubSpendKey: cryptoKeys.PubSpendKey,
+		},
+	}, nil
+}
+
 func NewUserGrpc(dbConnPool *pgxpool.Pool, log *zerolog.Logger) *UserGrpc {
 	return &UserGrpc{dbConnPool: dbConnPool, log: log}
 }
